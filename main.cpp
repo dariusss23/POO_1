@@ -1,10 +1,5 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
-
+#include <bits/stdc++.h>
 using namespace std;
-
 
 class Abonament {
 private:
@@ -60,7 +55,7 @@ string Abonament::getTip() {
     return this->tip;
 }
 
-Abonament Abonament::operator+(const Abonament& other) const{
+Abonament Abonament::operator+(const Abonament& other) const {
     return Abonament(
         this->tip + " & " + other.tip,
         this->pret + other.pret,
@@ -92,20 +87,18 @@ ostream& operator<<(ostream& out, Abonament& a) {
     return out;
 }
 
-
-
 class Membru {
 private:
     string nume;
     int varsta;
-    Abonament abonament;
+    Abonament* abonament; // Pointer către Abonament (relație de agregare)
 
 public:
     Membru();
-    Membru(string nume, int varsta, Abonament abonament);
+    Membru(string nume, int varsta, Abonament* abonament);
     Membru(const Membru& other);
     Membru& operator=(const Membru& other);
-    ~Membru() {}
+    ~Membru();
 
     void setVarsta(int varsta);
     int getVarsta();
@@ -120,9 +113,10 @@ public:
 Membru::Membru() {
     nume = "";
     varsta = 0;
+    abonament = nullptr;
 }
 
-Membru::Membru(string nume, int varsta, Abonament abonament) {
+Membru::Membru(string nume, int varsta, Abonament* abonament) {
     this->nume = nume;
     this->varsta = varsta;
     this->abonament = abonament;
@@ -132,6 +126,21 @@ Membru::Membru(const Membru& other) {
     this->nume = other.nume;
     this->varsta = other.varsta;
     this->abonament = other.abonament;
+}
+
+Membru& Membru::operator=(const Membru& other) {
+    if (this != &other) {
+        this->nume = other.nume;
+        this->varsta = other.varsta;
+        this->abonament = other.abonament;
+    }
+    return *this;
+}
+
+Membru::~Membru() {
+    if (abonament) {
+        delete abonament; // Eliberăm memoria
+    }
 }
 
 void Membru::setVarsta(int varsta) {
@@ -146,15 +155,6 @@ string Membru::getNume() {
     return this->nume;
 }
 
-Membru& Membru::operator=(const Membru& other) {
-    if (this != &other) {
-        this->nume = other.nume;
-        this->varsta = other.varsta;
-        this->abonament = other.abonament;
-    }
-    return *this;
-}
-
 void Membru::citire(istream &in) {
     cout << "Introdu numele membrului: ";
     in.ignore();
@@ -165,7 +165,11 @@ void Membru::citire(istream &in) {
 
 void Membru::afisare(ostream &out) {
     out << "Nume: " << nume << ", Varsta: " << varsta << " ani" << endl;
-    out << "Abonament: " << abonament << endl;
+    if (abonament) {
+        out << "Abonament: " << *abonament << endl;
+    } else {
+        out << "Abonament: N/A" << endl;
+    }
 }
 
 istream& operator>>(istream& in, Membru& m) {
@@ -178,24 +182,20 @@ ostream& operator<<(ostream& out, Membru& m) {
     return out;
 }
 
-
-
 class Sala {
-private:
-    vector<Membru> membri;
-    vector<Abonament> abonamente;
+    private:
+        vector<Abonament> abonamente;
 
-public:
-    Sala();
-    void adaugaMembru(Membru m);
-    void afisareMembri();
-    void afisareAbonamente();
-    Abonament alegereAbonament();
-    void stergeMembruFisier(const string& nume);
+    public:
+        Sala();
+        void adaugaMembru(Membru m);
+        void afisareMembri();
+        void afisareAbonamente();
+        Abonament alegereAbonament();
+        void stergeMembruFisier(const string& nume);
 };
 
-
-Sala::Sala(){
+Sala::Sala() {
     abonamente.push_back(Abonament("Standard", 180, 1));
     abonamente.push_back(Abonament("Premium", 485, 3));
     abonamente.push_back(Abonament("VIP", 850, 6));
@@ -241,7 +241,7 @@ void Sala::stergeMembruFisier(const string& nume) {
 
         if (counter % 2 == 0) {
             fout << '\n';
-            counter=0;
+            counter = 0;
         }
     }
 
@@ -253,38 +253,38 @@ void Sala::stergeMembruFisier(const string& nume) {
 void Sala::afisareMembri() {
     ifstream fin("SALA.TXT");
     string getContent;
-    while(!fin.eof()){
-        getline(fin,getContent);
+    while (!fin.eof()) {
+        getline(fin, getContent);
         cout << getContent << '\n';
     }
     fin.close();
 }
 
-void Sala::afisareAbonamente(){
-    cout<<"Abonamente disponibile in sala: "<<'\n';
+void Sala::afisareAbonamente() {
+    cout << "Abonamente disponibile in sala: " << '\n';
     for (Abonament& a : abonamente) {
         a.afisare(cout);
-        cout<<'\n';
+        cout << '\n';
     }
 }
 
 Abonament Sala::alegereAbonament() {
     int optiune;
 
-    do{
-        cout<<"Alege un abonament din urmatoarele: "<<'\n';
-        for (int i=0;i<abonamente.size();i++){
-            cout<<i+1<<" - ";
+    do {
+        cout << "Alege un abonament din urmatoarele: " << '\n';
+        for (int i = 0; i < abonamente.size(); i++) {
+            cout << i + 1 << " - ";
             abonamente[i].afisare(cout);
-            cout<<'\n';
+            cout << '\n';
         }
-        cout<<"Alege un numar de la 1 la "<<abonamente.size()<<": ";
-        cin>>optiune;
+        cout << "Alege un numar de la 1 la " << abonamente.size() << ": ";
+        cin >> optiune;
 
-        if (optiune<1 || optiune>abonamente.size()){
-            cout<<"Optiune invalida! Te rugam sa incerci din nou."<<'\n';
+        if (optiune < 1 || optiune > abonamente.size()) {
+            cout << "Optiune invalida! Te rugam sa incerci din nou." << '\n';
         }
-    } while (optiune<1 || optiune>abonamente.size());
+    } while (optiune < 1 || optiune > abonamente.size());
 
     return abonamente[optiune - 1];
 }
@@ -313,7 +313,7 @@ int main() {
     Sala sala;
     int whatTheyWant = getWhatTheyWant();
 
-    while (whatTheyWant != 5) { // 5 este acum pentru FINALIZARE
+    while (whatTheyWant != 5) {
         switch (whatTheyWant) {
             case 1: {
                 Membru m;
@@ -321,7 +321,7 @@ int main() {
                 cin >> m;
 
                 Abonament a = sala.alegereAbonament();
-                m = Membru(m.getNume(), m.getVarsta(), a);
+                m = Membru(m.getNume(), m.getVarsta(), new Abonament(a)); // Folosim pointer
 
                 sala.adaugaMembru(m);
                 break;
@@ -349,22 +349,5 @@ int main() {
     }
 
     cout << "Operatiuni finalizate!" << '\n';
-
-/*
-    Abonament abonament1("Premium", 485, 3);
-    Abonament abonament2("Hero", 1500, 12);
-
-    Abonament abonament3 = abonament1 + abonament2;
-
-    cout << "Abonament combinat: " << abonament3 << endl;
-*/
-
-/*
-    Membru membru1("Ion Ionut", 33, Abonament("Premium", 485, 3));
-    Membru membru2;
-
-    membru2 = membru1;
-    cout << membru2 << endl;
-*/
     return 0;
 }
